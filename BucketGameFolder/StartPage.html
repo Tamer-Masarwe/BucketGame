@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+
+
+    <script>
+
+
+        function startGame() {
+
+            numOfDisplayedNumbers = 1;
+            nextExpectedNumber = 1;
+            oldestNumber = 1;
+            gameFinished = false;
+            dragBucket(document.getElementById("bucket"));//Activates Mouse event listener
+            document.getElementById("numbersToBeDropped").innerHTML = "";
+            timerHandler = setInterval(setNumbers, 500);//waits for 0.25 sec before executing the next round
+        }
+
+        function setNumbers() {
+
+            screenWidth = window.innerWidth;//gets the browser's window width (not screen width)
+            screenHeight = Math.floor(0.8 * window.innerHeight);//80% Garden's height
+            str = "<div id=Number" + numOfDisplayedNumbers + " style='position: absolute; font-size: 25px; width: 50px; height: 50px; text-align: center'> " + (Math.floor(Math.random() * 10) + 1) + "</div>";
+            document.getElementById("numbersToBeDropped").innerHTML += str;
+            document.getElementById("Number" + numOfDisplayedNumbers).style.left = (Math.floor(Math.random() * (screenWidth - 50)) + 10) + "px";
+            document.getElementById("nextNumber").innerHTML = "Next Number: " + nextExpectedNumber;
+            moveElements(numOfDisplayedNumbers);//i represents how many numbers already displayed
+            numOfDisplayedNumbers++;
+        }
+
+        function moveElements(numberOfElements) {
+            var lastPosition = 0;
+            var currentElement;           
+
+            for (var i = oldestNumber; i <= numberOfElements; i++) {
+
+               
+                    currentElement = document.getElementById("Number" + i);
+
+                    lastPosition = currentElement.offsetTop;
+
+                    if (!gameFinished) {
+                        currentElement.style.top = lastPosition + 50 + "px";
+                    }
+                    else
+                        break;//Stop loop
+
+                    if (lastPosition + 100 > screenHeight) {
+                        checkIfInsertedIntoBucket(i);
+                        currentElement.parentNode.removeChild(currentElement);//remove the element who's outside the garden
+                        oldestNumber++;
+                        continue;
+                    }              
+            }
+        }
+
+        function checkIfInsertedIntoBucket(numberId) {
+
+            var numberPosition = document.getElementById("Number" + numberId).offsetLeft;
+            var numberValue = parseInt(document.getElementById("Number" + numberId).innerHTML);
+            var bucketPosition = document.getElementById("bucket").offsetLeft;
+            if (numberPosition >= (bucketPosition - 25) && numberPosition <= (bucketPosition + 25))//width of bucket is 50px
+            {
+                if (nextExpectedNumber != numberValue) {
+                    finishGame("You Losed, press start game button to play again!");
+                    return;
+                }
+                if (numberValue == 10) {
+                    finishGame("You Won, Congratulations!");
+                    return;
+                }
+                nextExpectedNumber += 1;
+                document.getElementById("nextNumber").innerHTML = "Next Number: " + nextExpectedNumber;
+            }
+
+        }
+
+        function finishGame(str)
+        {
+            alert(str);
+            clearInterval(timerHandler);
+            gameFinished = true;
+            document.onmousemove = null;
+            document.getElementById("bucket").onmousedown = null;//stops moving the bucket after clicking the "OK" button of the alert
+        }
+
+        function dragBucket(bucket) {
+            bucket.onmousedown = dragBucketDown;//creates onmouse event, so evry time the "bucket" div has been clicked, dragBucketDown method called
+        }
+
+        function dragBucketDown(bucketToMoveEvent)// bucketToMoveEvent is mouse event object
+        {
+            // if the method dosen't accept any argument so we can use window.event
+            bucketToMoveEvent = bucketToMoveEvent || window.event;// window.event is equal to the occured event, simply, internet explorer doesn't support the implementation bucket.onmousedown = function(event){ method activity}, so by doing the previous step we combine between the two implementations
+            bucketToMoveEvent.preventDefault();// prevents the event from doing its default action, every event has its default action that it implements in case there's no prevention
+            pos1 = bucketToMoveEvent.clientX;
+            document.onmouseup = closeBucketDragging;//document represents the web page, so we can access to onmouseup event listener using it
+            document.onmousemove = bucketDragging;//document represents the web page, so we can access to onmousemove event listener using it
+        }
+
+        function bucketDragging(bucketToMoveEvent) {
+
+            var pos2;
+            var newPos;
+
+            //if the method dosen't accept any argument so we can use window.event
+            pos2 = pos1 - bucketToMoveEvent.clientX;//The difference between two coordinates
+            pos1 = bucketToMoveEvent.clientX;//updates last x coordinates, for the next movement action
+            newPos = document.getElementById("bucket").offsetLeft - pos2;
+
+            if (newPos >= 0 && newPos <= (screenWidth-50))//keeps the bucket into the "garden"
+                document.getElementById("bucket").style.left = newPos + "px";
+        }
+
+        function closeBucketDragging() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+        }
+
+    </script>
+
+    <style>
+        #startBtn {
+            height: 30px;
+            width: 100px;
+        }
+
+        #startDiv {
+            text-align: center;
+        }
+
+        #GameGarden {
+            height: 80%;
+            position: fixed;
+            border: 2px solid black;
+            left: 3px;
+            right: 3px;
+            top: 40px;
+        }
+
+        #bucketImg {
+            width: 50px;
+            height: 50px;
+        }
+
+        #bucket {
+            position: absolute;
+            left: 50%;
+            bottom: 0px;
+            cursor: move;
+        }
+
+        #nextNumber {
+            float: left;
+            border: 0.5px solid black;
+            font-size: 25px;
+        }
+    </style>
+
+
+</head>
+<body>
+
+
+    <div class="container">
+
+        <div id="startDiv">
+            <input id="startBtn" type="button" onclick="startGame()" value="Start Game" />
+        </div>
+
+        <div id="GameGarden">
+            <div id="nextNumber"></div>
+            <div id="numbersToBeDropped"></div>
+            <div id="bucket"><img id="bucketImg" src="bucket .png" /></div>
+        </div>
+
+    </div>
+</body>
+</html>
